@@ -15,18 +15,24 @@
   },
   "author": "Mr.Splatchy",
   "type": "module",
-  "main": "src/main.js",
+  "main": "src/cli.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "tsx src/main.ts"
+    "start": "node dist/cli.js",
+    "dev": "tsx src/cli.ts"
   },
   "dependencies": {
-    "meow": "^14.1.0"
+    "@inquirer/prompts": "^8.5.2",
+    "commander": "^15.0.0",
+    "env-paths": "^4.0.0",
+    "node-ipc": "^9.2.1"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
     "tsx": "^4.23.1",
     "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true
   }
 }
