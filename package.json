@@ -1,0 +1,32 @@
+{
+  "name": "password-manager-cli",
+  "version": "0.0.1",
+  "description": "u",
+  "keywords": [
+    "password-manager"
+  ],
+  "homepage": "https://github.com/MrSplatchy/password-manager-cli#readme",
+  "bugs": {
+    "url": "https://github.com/MrSplatchy/password-manager-cli/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MrSplatchy/password-manager-cli.git"
+  },
+  "author": "Mr.Splatchy",
+  "type": "module",
+  "main": "src/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/main.ts"
+  },
+  "dependencies": {
+    "meow": "^14.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  }
+}
