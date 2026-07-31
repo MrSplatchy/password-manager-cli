@@ -1,5 +1,6 @@
 import { Command } from 'commander';
-import { CreateNewServer } from './vault.ts';
+import { CreateNewServer, CreateVault } from './vault.js';
+
 
 const program = new Command();
 
@@ -20,9 +21,9 @@ program
 
 program
     .command("create")
-    .description("Initiallise")
+    .description("Creates a vault")
     .action(() => {
-        CreateNewServer()
+        CreateVault()
     })
 
 
