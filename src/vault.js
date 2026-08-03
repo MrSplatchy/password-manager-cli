@@ -1,80 +1,113 @@
-import ipc from "@node-ipc/node-ipc";
-import { password  } from '@inquirer/prompts';
+import { input, password } from "@inquirer/prompts";
 import sodium from "libsodium-wrappers-sumo";
-import envPaths from "env-paths";
-import fs from "fs"
-
-export async function CreateNewServer() {
-    const response = await password ({ 
-        message: 'Create a Master Password',
-        mask: true
-    })
-    sodium.ready
-    ipc.config.id = "vault"
-    ipc.serve(() => {
-        ipc.server.on("encrypt", (data) =>{
-            ipc.log(data)
-            derived_key = sodium.crypto_pwhash_str(
-                sodium.crypto_pwhash_PASSWD_MIN,
-                data,
-                sodium.randombytes_buf(sodium.crypto_pwhash_SALTBYTES),
-                sodium.crypto_pwhash_OPSLIMIT_MODERATE,
-                sodium.crypto_pwhash_MEMLIMIT_MODERATE,
-                sodium.crypto_pwhash_ALG_DEFAULT
-            )
-        })
-    })
-    
-
-}
+import fs from "fs";
 
 export async function CreateVault() {
-    // Choose password
-    const psw = await password ({ 
-        message: 'Create a Master Password',
-        mask: true
-    })
-    sodium.ready
+  if (fs.existsSync("vault.bin")) {
+    console.log("vault already created");
+    return;
+  }
 
-    // Create salt & key
-    const salt = sodium.randombytes_buf(16)
+  // Choose password
+  const psw = await password({
+    message: "Create a Master Password",
+    mask: true,
+  });
+  sodium.ready;
 
-    const key = sodium.crypto_pwhash(
-        sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
-        psw,
-        salt,
-        sodium.crypto_pwhash_OPSLIMIT_MODERATE,
-        sodium.crypto_pwhash_MEMLIMIT_MODERATE,
-        sodium.crypto_pwhash_ALG_DEFAULT
-    )
+  // Create salt & key
+  const salt = sodium.randombytes_buf(sodium.crypto_pwhash_SALTBYTES);
 
-    // Create nonce
-    const nonce = sodium.randombytes_buf(
-        sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
-    )
+  const key = sodium.crypto_pwhash(
+    sodium.crypto_secretbox_KEYBYTES,
+    psw,
+    salt,
+    sodium.crypto_pwhash_OPSLIMIT_MODERATE,
+    sodium.crypto_pwhash_MEMLIMIT_MODERATE,
+    sodium.crypto_pwhash_ALG_DEFAULT,
+  );
 
-    // Create vault
-    const plaintext = JSON.stringify({
-    entries: []
-    });
+  // Create nonce
+  const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
 
-    const ciphertext = sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(
-        plaintext,
-        null,  
-        null,      
-        nonce,
-        key
-    );
+  // Create vault
+  const plaintext = JSON.stringify([
+    {
+      username: "",
+      password: "",
+    },
+  ]);
 
-    // Save as file
-    const vault = {
-        salt: sodium.to_base64(salt),
-        nonce: sodium.to_base64(nonce),
-        ciphertext: sodium.to_base64(ciphertext),
-    };
+  const ciphertext = sodium.crypto_secretbox_easy(plaintext, nonce, key);
 
-    fs.writeFileSync("vault.json", JSON.stringify(vault))
+  // Save as file
+  const enc_data = Buffer.concat([
+    Buffer.from(salt),
+    Buffer.from(nonce),
+    Buffer.from(ciphertext),
+  ]);
 
+  fs.writeFileSync("vault.bin", enc_data);
+}
 
-    
+async function OpenVault(salt, nonce, ciphertext) {
+  const psw = await password({
+    message: "Enter your master password",
+    mask: true,
+  });
+
+  const key = sodium.crypto_pwhash(
+    sodium.crypto_secretbox_KEYBYTES,
+    psw,
+    salt,
+    sodium.crypto_pwhash_OPSLIMIT_MODERATE,
+    sodium.crypto_pwhash_MEMLIMIT_MODERATE,
+    sodium.crypto_pwhash_ALG_DEFAULT,
+  );
+
+  try {
+    const plaintext = sodium.crypto_secretbox_open_easy(ciphertext, nonce, key);
+  } catch (err) {
+    console.log("Wrong!");
+    return;
+  }
+
+  console.log("OK->");
+  return [plaintext, key];
+}
+
+export async function NewEntry() {
+  // Read file
+  const file = fs.readFileSync("vault.bin");
+  const salt = file.subarray(0, 16);
+  let nonce = file.subarray(16, 40);
+  const ciphertext = file.subarray(40);
+  sodium.ready;
+
+  // Opens the vault
+  const [bytestext, key] = OpenVault(salt, nonce, ciphertext);
+
+  // Ask for the new username and password
+  const username = await input({ message: "Username:" });
+  const passwd = await password({ message: "Password:" });
+
+  plaintext = sodium.to_string(bytestext);
+  vault = JSON.parse(plaintext);
+  vault.push({ username: username, password: passwd });
+
+  const new_nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
+
+  const ciphertext = sodium.crypto_secretbox_easy(
+    JSON.stringify(vault),
+    nonce,
+    key,
+  );
+
+  const enc_data = Buffer.concat([
+    Buffer.from(salt),
+    Buffer.from(new_nonce),
+    Buffer.from(ciphertext),
+  ]);
+
+  fs.writeFileSync("vault.bin", enc_data);
 }
