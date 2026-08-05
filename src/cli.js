@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { CreateNewServer, CreateVault, NewEntry } from "./vault.js";
+import { CreateVault, NewEntry, ListUsernames } from "./vault.js";
 
 const program = new Command();
 
@@ -32,9 +32,9 @@ program
 
 program
   .command("list")
-  .description("Initiallise")
+  .description("List of every username")
   .action(() => {
-    console.log("imagine list");
+    ListUsernames()
   });
 
 program
