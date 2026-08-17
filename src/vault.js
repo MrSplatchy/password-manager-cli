@@ -1,7 +1,8 @@
-import { input, password } from "@inquirer/prompts";
+import { input, password, select } from "@inquirer/prompts";
 import sodium from "libsodium-wrappers-sumo";
 import fs from "fs";
 import { EncryptVault, OpenVault } from "./utils.js";
+import clipboard from "clipboardy";
 
 export async function CreateVault() {
   if (fs.existsSync("vault.bin")) {
@@ -85,12 +86,35 @@ export async function ListUsernames(params) {
 
   const vault = JSON.parse(sodium.to_string(bytestext));
   for (const item of vault) {
-    console.log(item.website);
-    console.log(item.username)
+    console.log("-----------")
+    console.log("Website:" + item.website);
+    console.log("Username:" + item.username)
   }
 
 
   EncryptVault(vault, key, salt)
 
   
+}
+
+export async function FindPassword(params) {
+  const result = await OpenVault();
+  if (!result) return;
+  const [bytestext, key, salt] = result;
+  const vault = JSON.parse(sodium.to_string(bytestext));
+
+
+  const password = await select({
+    message: "Select a username to get its password:",
+    choices: vault.map(item => ({
+      name: item.username,
+      value: item.password,
+    })),
+  });
+
+  await clipboard.write(password);
+  console.log("Password on the clipboard!");
+  
+  EncryptVault(vault, key, salt)
+
 }

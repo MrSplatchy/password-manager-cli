@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { CreateVault, NewEntry, ListUsernames } from "./vault.js";
+import { CreateVault, NewEntry, ListUsernames, FindPassword } from "./vault.js";
 
 const program = new Command();
 
@@ -7,6 +7,7 @@ program
   .name("termipass")
   .description("Password manager and generator")
   .version("0.0.1");
+
 
 // Initialises a Master Password with a prompt, otherwise is prompted for the Password
 program
@@ -22,19 +23,19 @@ program
   .action(() => {
     NewEntry();
   });
-
-program
-  .command("get")
-  .description("Initiallise")
-  .action(() => {
-    console.log("67");
-  });
-
+  
 program
   .command("list")
   .description("List of every username")
   .action(() => {
     ListUsernames()
+  });
+
+program
+  .command("get")
+  .description("Initiallise")
+  .action(() => {
+    FindPassword()
   });
 
 program
