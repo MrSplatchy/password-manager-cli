@@ -118,3 +118,31 @@ export async function FindPassword(params) {
   EncryptVault(vault, key, salt)
 
 }
+
+export async function DeleteEntry() {
+  const result = await OpenVault();
+  if (!result) return;
+  const [bytestext, key, salt] = result;
+  const vault = JSON.parse(sodium.to_string(bytestext));
+
+  const index = await select({
+    message: "Select an item to delete:",
+    choices: vault.map((item, index) => ({
+      name: `${item.website}: ${item.username}`,
+      value: index,
+    })),
+  });
+
+  vault.splice(index, 1);
+  EncryptVault(vault, key, salt);
+  console.log("Item deleted!");
+}
+
+export async function GeneratePassword() {
+  await sodium.ready;
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+  const generated = Array.from({ length: 20 }, () => chars[sodium.randombytes_uniform(chars.length)]).join("");
+
+  await clipboard.write(generated);
+  console.log("Generated password copied to the clipboard!");
+}

@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { CreateVault, NewEntry, ListUsernames, FindPassword } from "./vault.js";
+import { CreateVault, NewEntry, ListUsernames, FindPassword, DeleteEntry, GeneratePassword } from "./vault.js";
 
 const program = new Command();
 
@@ -23,7 +23,7 @@ program
   .action(() => {
     NewEntry();
   });
-  
+
 program
   .command("list")
   .description("List of every username")
@@ -33,16 +33,23 @@ program
 
 program
   .command("get")
-  .description("Initiallise")
+  .description("get an item")
   .action(() => {
     FindPassword()
   });
 
 program
-  .command("generate")
-  .description("Initiallise")
+  .command("delete")
+  .description("removes an item")
   .action(() => {
-    console.log("etvhfrf");
+    DeleteEntry()
+  });
+
+program
+  .command("generate")
+  .description("generates a password")
+  .action(() => {
+    GeneratePassword();
   });
 
 program.parse();
